@@ -1,7 +1,7 @@
 require_relative '../rails_helper'
 
 describe Commands do
-  context 'empty command' do
+  context 'with empty command class' do
     let(:cmd_class) do
       Class.new do
         include Commands::Dsl
@@ -21,10 +21,10 @@ describe Commands do
         end
       end
     end
-    it 'call default with single arg' do
+    it 'calls default with single arg' do
       expect(cmd_class.execute :anything).to eq [:anything]
     end
-    it 'call default with all args' do
+    it 'calls default with all args' do
       expect(cmd_class.execute :a, :b, :c).to eq %i(a b c)
     end
   end
@@ -34,13 +34,13 @@ describe Commands do
       Class.new do
         include Commands::Dsl
         command :one do |*args|
-          args.unshift :one
+          [:one, *args]
         end
         command :two do |*args|
-          args.unshift :two
+          [:two, *args]
         end
       end
-      it 'call registered command with arguments' do
+      it 'calls registered command with arguments' do
         expect(cmd_class.execute :one, :a, :b).to eq %i(one a b)
         expect(cmd_class.execute :two, :c, :d).to eq %i(two c d)
       end
@@ -52,7 +52,7 @@ describe Commands do
       Class.new do
         include Commands::Dsl
         command :one do |*args|
-          args.unshift :one
+          [:one, *args]
         end
         def default(cmd, *rest)
           [:default, cmd, *rest]
@@ -73,13 +73,13 @@ describe Commands do
         command :subcmd_empty, sub_empty
       end
     end
-    it 'call subcommand class with defined command' do
+    it 'calls subcommand class with defined command' do
       expect(cmd_class.execute :subcmd, :one, :a).to eq %i(one a)
     end
-    it 'call subcommand class with default handler' do
+    it 'calls subcommand class with default handler' do
       expect(cmd_class.execute :subcmd, :sth, :a).to eq %i(default sth a)
     end
-    it 'call subcommand class with no default handler defined' do
+    it 'calls subcommand class with no default handler defined' do
       expect { cmd_class.execute :subcmd_empty, :sth }.to raise_exception NotImplementedError
     end
   end
