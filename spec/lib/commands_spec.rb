@@ -1,4 +1,4 @@
-require_relative '../rails_helper'
+require 'rails_helper'
 
 describe Commands do
   context 'with empty command class' do
