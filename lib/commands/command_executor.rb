@@ -5,7 +5,7 @@ module Commands
       @callee = command_or_block
     end
 
-    def execute(args)
+    def execute(*args)
       case callee
         when Class
           callee.execute *args

@@ -21,8 +21,9 @@ module Commands
       end
 
       def execute(*args)
+        context_options = args.extract_options!
         cmd, *rest = args.map(&:to_s).map(&:to_sym)
-        registered_commands[cmd]&.execute(rest) || self.new.default(cmd, *rest)
+        registered_commands[cmd]&.execute(*rest, context_options) || self.new.default(cmd, *rest, context_options)
       end
 
       private
@@ -37,8 +38,9 @@ module Commands
     end
 
     def execute(*args)
+      context_options = args.extract_options!
       cmd, *rest = args.map(&:to_s).map(&:to_sym)
-      self.class.send(:registered_commands)[cmd]&.execute(rest) || default(cmd, *rest)
+      self.class.send(:registered_commands)[cmd]&.execute(*rest, context_options) || default(cmd, *rest, context_options)
     end
   end
 end

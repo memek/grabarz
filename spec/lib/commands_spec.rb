@@ -17,15 +17,30 @@ describe Commands do
       Class.new do
         include Commands::Dsl
         def default(cmd, *rest)
-          [cmd, *rest]
+          {
+            cmd: cmd,
+            args: rest,
+            context: rest.extract_options!
+          }
         end
       end
     end
     it 'calls default with single arg' do
-      expect(cmd_class.execute :anything).to eq [:anything]
+      expect(cmd_class.execute :anything).to be_instance_of Hash
     end
     it 'calls default with all args' do
-      expect(cmd_class.execute :a, :b, :c).to eq %i(a b c)
+      expect(cmd_class.execute :a, :b, :c).to eq({
+        cmd: :a,
+        args: [:b, :c],
+        context: {}
+      })
+    end
+    it 'calls default with context' do
+      expect(cmd_class.execute :a, :b, :c, opt: 1).to eq ({
+        cmd: :a,
+        args: [:b, :c],
+        context: { opt: 1 }
+      })
     end
   end
 
@@ -34,15 +49,21 @@ describe Commands do
       Class.new do
         include Commands::Dsl
         command :one do |*args|
-          [:one, *args]
+          [:one, *args.except_options!]
         end
         command :two do |*args|
-          [:two, *args]
+          [:two, *args.except_options!]
+        end
+        command :three do |*args|
+          [:three, *args]
         end
       end
       it 'calls registered command with arguments' do
         expect(cmd_class.execute :one, :a, :b).to eq %i(one a b)
         expect(cmd_class.execute :two, :c, :d).to eq %i(two c d)
+      end
+      it 'calls registered command with arguments and context' do
+        except(cmd_class.execute :three, :e, f: 1).to eq [:three, :e, f: 1]
       end
     end
   end
@@ -52,10 +73,13 @@ describe Commands do
       Class.new do
         include Commands::Dsl
         command :one do |*args|
-          [:one, *args]
+          [:one, *args.except_options!]
+        end
+        command :two do |*args|
+          [:two, *args]
         end
         def default(cmd, *rest)
-          [:default, cmd, *rest]
+          [:default, cmd, *rest.except_options!]
         end
       end
     end
@@ -78,6 +102,9 @@ describe Commands do
     end
     it 'calls subcommand class with default handler' do
       expect(cmd_class.execute :subcmd, :sth, :a).to eq %i(default sth a)
+    end
+    it 'calls subcommand class with defined command and context' do
+      expect(cmd_class.execute :subcmd, :two, :a, b: 1).to eq [:two, :a, b: 1]
     end
     it 'calls subcommand class with no default handler defined' do
       expect { cmd_class.execute :subcmd_empty, :sth }.to raise_exception NotImplementedError
