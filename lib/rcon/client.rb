@@ -30,7 +30,7 @@ module Rcon
       rescue IO::EAGAINWaitReadable
         retries += 1
         if wait && retries <= 1
-          sleep 1 # wait 1 second before retry
+          sleep 0.5 # wait half a second before retry
           retry
         end
       end
